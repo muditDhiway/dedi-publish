@@ -5,7 +5,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   const handleDocumentationClick = () => {
-    window.open('https://github.com/dhiway/dedi-publish', '_blank');
+    window.open('https://github.com/finternet-io/DeDi', '_blank');
   };
 
   const handleFeedbackClick = () => {
