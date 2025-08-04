@@ -206,7 +206,7 @@ export function RecordDetailsPage(): JSX.Element {
       
       const response = await fetch(apiUrl, {
         method: 'GET',
-        credentials: 'include',
+        // credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

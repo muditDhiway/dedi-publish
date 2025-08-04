@@ -243,7 +243,7 @@ export function RecordsPage() {
         `${API_BASE_URL}/dedi/search/${namespaceId}?${searchParams.toString()}`,
         {
           method: "GET",
-          credentials: "include",
+          // credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -383,6 +383,9 @@ export function RecordsPage() {
   };
 
   const handleOpenAddModal = () => {
+    console.log('🔧 Opening add modal with schema:', schema);
+    console.log('🔧 Array field configs:', arrayFieldConfigs);
+    
     // Initialize form with empty details based on schema
     const initialDetails: { [key: string]: string } = {};
     const initialArrayFields: { [key: string]: unknown[] } = {};
@@ -397,6 +400,7 @@ export function RecordsPage() {
         : 'string') || 'string';
       
       if (fieldType === 'array' && arrayFieldConfigs[field]) {
+        console.log(`🔧 ${field} is an array field with config:`, arrayFieldConfigs[field]);
         // Initialize array fields with one empty item
         const emptyItem: { [key: string]: string } = {};
         Object.keys(arrayFieldConfigs[field]).forEach(itemKey => {
@@ -404,9 +408,13 @@ export function RecordsPage() {
         });
         initialArrayFields[field] = [emptyItem];
       } else {
+        console.log(`🔧 ${field} is a regular field`);
         initialDetails[field] = '';
       }
     });
+    
+    console.log('🔧 Initial details:', initialDetails);
+    console.log('🔧 Initial array fields:', initialArrayFields);
     
     setAddFormData({
       record_name: '',
@@ -632,9 +640,7 @@ export function RecordsPage() {
       const schemaProps = schema.properties || schema;
       Object.keys(schemaProps).forEach(field => {
         const fieldSchema = schema.properties ? schema.properties[field] : schema[field];
-        const fieldType = (fieldSchema && typeof fieldSchema === 'object' && 'type' in fieldSchema 
-          ? (fieldSchema as { type: string }).type?.toLowerCase() 
-          : 'string') || 'string';
+        const fieldType = (fieldSchema as { type: string }).type.toLowerCase() || 'string';
         const value = addFormData.details[field];
         
         if (value !== undefined && value !== '') {
