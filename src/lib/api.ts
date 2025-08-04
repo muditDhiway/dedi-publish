@@ -45,7 +45,7 @@ api.interceptors.response.use(
 export default api;
 
 // Get the API base URL from environment variable or use default
-const API_BASE_URL = import.meta.env.VITE_ENDPOINT || "https://dev.dedi.global";
+const API_BASE_URL = import.meta.env.VITE_ENDPOINT || "https://registry.becknone.dev.dedi.global";
 
 // Configure default fetch options to include credentials
 const defaultFetchOptions = {
