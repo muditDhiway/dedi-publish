@@ -122,7 +122,7 @@ export async function getNamespacesByProfile(): Promise<unknown> {
 export async function getNamespaceVersions(namespace: string): Promise<unknown> {
   const response = await fetch(`${API_BASE_URL}/dedi/versions/${namespace}`, {
     method: "GET",
-    ...defaultFetchOptions,
+    // ...defaultFetchOptions,
   });
 
   if (response.ok) {
@@ -247,7 +247,7 @@ export async function logoutUser(): Promise<void> {
 export async function getRegistryLookup(namespace: string, registryName: string): Promise<unknown> {
   const response = await fetch(`${API_BASE_URL}/dedi/lookup/${namespace}/${registryName}`, {
     method: "GET",
-    ...defaultFetchOptions,
+    // ...defaultFetchOptions,
   });
 
   if (response.ok) {
@@ -262,7 +262,7 @@ export async function getRegistryLookup(namespace: string, registryName: string)
 export async function getRegistryVersions(namespace: string, registryName: string): Promise<unknown> {
   const response = await fetch(`${API_BASE_URL}/dedi/versions/${namespace}/${registryName}`, {
     method: "GET",
-    ...defaultFetchOptions,
+    // ...defaultFetchOptions,
   });
 
   if (response.ok) {
@@ -292,7 +292,7 @@ export async function getRegistriesByProfile(namespace: string): Promise<unknown
 export async function getRecordVersions(namespace: string, registryName: string, recordName: string): Promise<unknown> {
   const response = await fetch(`${API_BASE_URL}/dedi/versions/${namespace}/${registryName}/${recordName}`, {
     method: "GET",
-    ...defaultFetchOptions,
+    // ...defaultFetchOptions,
   });
 
   if (response.ok) {
@@ -307,7 +307,7 @@ export async function getRecordVersions(namespace: string, registryName: string,
 export async function searchRecords(namespace: string, query: string): Promise<unknown> {
   const response = await fetch(`${API_BASE_URL}/dedi/search/${namespace}?q=${encodeURIComponent(query)}`, {
     method: "GET",
-    ...defaultFetchOptions,
+    // ...defaultFetchOptions,
   });
 
   if (response.ok) {

@@ -629,13 +629,33 @@ export function NamespaceDetailsPage() {
         revokedEndpoint = `${API_BASE_URL}/dedi/query/${namespaceId}?status=revoked`;
       }
       
-      const response = await fetch(revokedEndpoint, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await fetch(revokedEndpoint, {
+      //   method: "GET",
+      //   credentials: "include",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+
+      let response: Response;
+      if (namespaceType === 'delegated') {
+        response = await fetch(revokedEndpoint, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      } else {
+        response = await fetch(revokedEndpoint, {
+          method: "GET",
+          // credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+
 
       const result: NamespaceQueryResponse = await response.json();
       console.log("📊 Revoked registries API response:", result);

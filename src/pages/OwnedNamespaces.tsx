@@ -137,7 +137,7 @@ export function OwnedNamespacesPage() {
         import.meta.env.VITE_ENDPOINT || "https://dev.dedi.global";
       const response = await fetch(`${API_BASE_URL}/dedi/verify-domain`, {
         method: "POST",
-        credentials: "include",
+        // credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

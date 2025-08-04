@@ -139,7 +139,7 @@ export function ActiveRegistriesPage() {
       const API_BASE_URL = import.meta.env.VITE_ENDPOINT || 'https://dev.dedi.global';
       const response = await fetch(`${API_BASE_URL}/dedi/query/${namespaceId}`, {
         method: 'GET',
-        credentials: 'include',
+        // credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
