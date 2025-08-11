@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import * as XLSX from "xlsx";
 import {
   Plus,
   Upload,
@@ -1657,6 +1658,127 @@ export function NamespaceDetailsPage() {
     }
   };
 
+  // const handleBulkUpload = async () => {
+  //   if (uploadLoading) return; // Prevent multiple submissions
+
+  //   try {
+  //     if (!selectedFiles || selectedFiles.length === 0) {
+  //       toast({
+  //         title: "Error",
+  //         description: "Please select at least one file to upload",
+  //         variant: "destructive",
+  //       });
+  //       return;
+  //     }
+
+  //     // Cookie authentication is handled automatically by credentials: 'include'
+
+  //     setUploadLoading(true);
+  //     setUploadProgress(["Starting upload..."]);
+  //     setUploadProgressPercent(0);
+  //     setProcessedFiles(0);
+  //     setTotalFiles(selectedFiles.length);
+  //     setCompletedFileNames(new Set());
+
+  //     // Set global upload status
+  //     setGlobalUploadStatus({
+  //       isUploading: true,
+  //       message: `Starting upload of ${selectedFiles.length} file(s)...`,
+  //       namespaceId: namespaceId || "",
+  //       progress: 0,
+  //     });
+
+  //     // Create FormData
+  //     const formData = new FormData();
+  //     formData.append("namespace", namespaceId || "");
+
+  //     // Add all selected files
+  //     Array.from(selectedFiles).forEach((file) => {
+  //       formData.append("file", file);
+  //     });
+
+  //     const API_BASE_URL =
+  //       import.meta.env.VITE_ENDPOINT || "https://dev.dedi.global";
+  //     const response = await fetch(`${API_BASE_URL}/dedi/bulk-upload`, {
+  //       method: "POST",
+  //       credentials: "include",
+  //       headers: {},
+  //       body: formData,
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const result: BulkUploadInitialResponse = await response.json();
+  //     console.log("📤 Initial upload response:", result);
+
+  //     if (
+  //       result.status === "success" &&
+  //       result.message === "Bulk upload job started successfully"
+  //     ) {
+  //       // Show initial success toast
+  //       toast({
+  //         title: "🚀 Bulk Upload Started!",
+  //         description:
+  //           "Your files are being processed. You'll be notified as each file completes.",
+  //         className: "border-blue-200 bg-blue-50 text-blue-900",
+  //         duration: 3000,
+  //       });
+
+  //       // Set the job ID to start polling
+  //       setUploadJobId(result.data.jobId);
+  //       setTotalFiles(result.data.totalFiles);
+
+  //       // Initialize progress immediately
+  //       setUploadProgressPercent(0);
+  //       setProcessedFiles(0);
+
+  //       // Update progress log
+  //       setUploadProgress((prev) => [
+  //         ...prev,
+  //         `Job started with ID: ${result.data.jobId}`,
+  //         `Processing ${result.data.totalFiles} files...`,
+  //       ]);
+
+  //       // Update global status with initial progress
+  //       setGlobalUploadStatus((prev) =>
+  //         prev
+  //           ? {
+  //               ...prev,
+  //               message: `Processing ${result.data.totalFiles} files... 0/${result.data.totalFiles} completed`,
+  //               progress: 0,
+  //             }
+  //           : null
+  //       );
+
+  //       // Note: uploadLoading stays true to keep the modal in processing state
+  //       // The polling useEffect will handle the rest
+  //     } else {
+  //       throw new Error(result.message || "Failed to start bulk upload job");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error starting bulk upload:", error);
+  //     setGlobalUploadStatus(null); // Clear global status on error
+  //     setUploadLoading(false);
+  //     setUploadJobId(null);
+
+  //     toast({
+  //       title: "Error",
+  //       description:
+  //         error instanceof Error
+  //           ? error.message
+  //           : "Failed to start bulk upload. Please try again.",
+  //       variant: "destructive",
+  //       duration: 7000,
+  //     });
+  //     setUploadProgress((prev) => [
+  //       ...prev,
+  //       "Upload failed to start. Please try again.",
+  //     ]);
+  //   }
+  // };
+
   const handleBulkUpload = async () => {
     if (uploadLoading) return; // Prevent multiple submissions
 
@@ -1670,8 +1792,6 @@ export function NamespaceDetailsPage() {
         return;
       }
 
-      // Cookie authentication is handled automatically by credentials: 'include'
-
       setUploadLoading(true);
       setUploadProgress(["Starting upload..."]);
       setUploadProgressPercent(0);
@@ -1679,7 +1799,6 @@ export function NamespaceDetailsPage() {
       setTotalFiles(selectedFiles.length);
       setCompletedFileNames(new Set());
 
-      // Set global upload status
       setGlobalUploadStatus({
         isUploading: true,
         message: `Starting upload of ${selectedFiles.length} file(s)...`,
@@ -1687,14 +1806,44 @@ export function NamespaceDetailsPage() {
         progress: 0,
       });
 
+      // Prepare files: convert Excel to CSV if needed
+      const processedFiles: File[] = [];
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const ext = file.name.split('.').pop()?.toLowerCase();
+
+        if (ext === "csv") {
+          processedFiles.push(file);
+        } else if (ext === "xlsx" || ext === "xls") {
+          // Convert Excel to CSV using SheetJS
+          const arrayBuffer = await file.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const csv = XLSX.utils.sheet_to_csv(worksheet);
+
+          // Create a new File object for CSV
+          const csvFile = new File(
+            [csv],
+            file.name.replace(/\.(xlsx|xls)$/i, ".csv"),
+            { type: "text/csv" }
+          );
+          processedFiles.push(csvFile);
+        } else {
+          toast({
+            title: "Error",
+            description: `Unsupported file type: ${file.name}. Only CSV and Excel files are allowed.`,
+            variant: "destructive",
+          });
+          setUploadLoading(false);
+          return;
+        }
+      }
+
       // Create FormData
       const formData = new FormData();
       formData.append("namespace", namespaceId || "");
-
-      // Add all selected files
-      Array.from(selectedFiles).forEach((file) => {
-        formData.append("file", file);
-      });
+      processedFiles.forEach((file) => formData.append("file", file));
 
       const API_BASE_URL =
         import.meta.env.VITE_ENDPOINT || "https://dev.dedi.global";
@@ -1716,7 +1865,6 @@ export function NamespaceDetailsPage() {
         result.status === "success" &&
         result.message === "Bulk upload job started successfully"
       ) {
-        // Show initial success toast
         toast({
           title: "🚀 Bulk Upload Started!",
           description:
@@ -1725,22 +1873,18 @@ export function NamespaceDetailsPage() {
           duration: 3000,
         });
 
-        // Set the job ID to start polling
         setUploadJobId(result.data.jobId);
         setTotalFiles(result.data.totalFiles);
 
-        // Initialize progress immediately
         setUploadProgressPercent(0);
         setProcessedFiles(0);
 
-        // Update progress log
         setUploadProgress((prev) => [
           ...prev,
           `Job started with ID: ${result.data.jobId}`,
           `Processing ${result.data.totalFiles} files...`,
         ]);
 
-        // Update global status with initial progress
         setGlobalUploadStatus((prev) =>
           prev
             ? {
@@ -1750,15 +1894,12 @@ export function NamespaceDetailsPage() {
               }
             : null
         );
-
-        // Note: uploadLoading stays true to keep the modal in processing state
-        // The polling useEffect will handle the rest
       } else {
         throw new Error(result.message || "Failed to start bulk upload job");
       }
     } catch (error) {
       console.error("Error starting bulk upload:", error);
-      setGlobalUploadStatus(null); // Clear global status on error
+      setGlobalUploadStatus(null);
       setUploadLoading(false);
       setUploadJobId(null);
 
