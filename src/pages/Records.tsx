@@ -204,11 +204,40 @@ export function RecordsPage() {
   const [showSearchResults, setShowSearchResults] = useState(false);
 
 
-  // Get all available search fields (record_name + schema fields)
+  // Helper function to flatten schema properties recursively for search
+  const flattenSchemaProperties = (properties: Record<string, unknown>, prefix = ''): string[] => {
+    const fields: string[] = [];
+    
+    Object.keys(properties).forEach(key => {
+      // Skip JSON schema metadata fields
+      if (key.startsWith('$') || ['description', 'type', 'required', 'additionalProperties'].includes(key)) {
+        return;
+      }
+      
+      const property = properties[key];
+      const fieldName = prefix ? `${prefix}.${key}` : key;
+      
+      // Check if this property is an object with nested properties
+      if (property && typeof property === 'object' && 'type' in property && property.type === 'object' && 'properties' in property) {
+        // Recursively flatten nested object properties
+        const nestedProperties = property.properties as Record<string, unknown>;
+        const nestedFields = flattenSchemaProperties(nestedProperties, fieldName);
+        fields.push(...nestedFields);
+      } else {
+        // Add the field as-is (using dot notation)
+        fields.push(fieldName);
+      }
+    });
+    
+    console.log('🔍 Flattened schema fields (dot notation):', fields);
+    return fields;
+  };
+
+  // Get all available search fields (record_name + flattened nested fields)
   const getAvailableSearchFields = () => {
     const schemaProperties = schema.properties || schema;
-    const schemaFields = Object.keys(schemaProperties);
-    return ['record_name', ...schemaFields];
+    const flattenedFields = flattenSchemaProperties(schemaProperties);
+    return ['record_name', ...flattenedFields];
   };
 
   // Initialize search with one empty field
@@ -236,6 +265,7 @@ export function RecordsPage() {
       searchParams.append('registry_name', registryName || '');
       
       activeFields.forEach(field => {
+        console.log(`🔍 Search field: ${field.key} = ${field.value.trim()}`);
         searchParams.append(field.key, field.value.trim());
       });
       
@@ -936,9 +966,9 @@ export function RecordsPage() {
                     <SelectItem key="record_name" value="record_name">
                       Record Name
                     </SelectItem>
-                    {Object.keys(schema.properties || schema).map((schemaField) => (
+                    {flattenSchemaProperties(schema.properties || schema).map((schemaField) => (
                       <SelectItem key={schemaField} value={schemaField}>
-                        {schemaField}
+                        {schemaField.split('.').pop()?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || schemaField}
                       </SelectItem>
                     ))}
                   </SelectContent>
